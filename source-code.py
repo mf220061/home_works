@@ -50,6 +50,12 @@ def cal_avarage_packets(buffer_history):
         c += 1
     return sum(counts) / sum(history)
 
+def cal_avarage_system_time(buffer_history, packets_num):
+    return sum(list(map(lambda x: x[0], buffer_history))) / packets_num
+
+def cal_avarage_wait_time(buffer_history, packets_num):
+    return sum(list(filter(lambda x: x >= 0, map(lambda x: x[0]-1, buffer_history)))) / packets_num
+
 def exponential_distribution(Lambda):
     return (-1 / Lambda) * math.log(1 - random.random())
 
@@ -87,7 +93,7 @@ def main():
             bufferB_packets_history = avarage_packets(bufferB_packets_history, t1, bufferB)
             # パケットが到着した
             # 平均到着率はexponential_distribution関数の引数の逆数：つまり1/1で1
-            td = exponential_distribution(1)
+            td = exponential_distribution(1.1)
             packet = Packet()
             # とりあえず、並列でやることにする
             if random.random() < 0.45:
@@ -181,13 +187,21 @@ bufferB: {}
 total:   {}
 bufferA: {}
 bufferB: {}
-""".format(t1, None, None)) 
+""".format(
+    cal_avarage_system_time(bufferA_packets_history + bufferB_packets_history, c1),
+    cal_avarage_system_time(bufferA_packets_history, c1a),
+    cal_avarage_system_time(bufferB_packets_history, c1b)
+    ))
 
     print("""平均システム内待ち行列遅延
 total:   {}
 bufferA: {}
 bufferB: {}
-""".format(t1, None, None)) 
+""".format(
+    cal_avarage_wait_time(bufferA_packets_history + bufferB_packets_history, c1),
+    cal_avarage_wait_time(bufferA_packets_history, c1a),
+    cal_avarage_wait_time(bufferB_packets_history, c1b)
+    ))
             
 if __name__ == "__main__":
     main()
