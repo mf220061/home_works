@@ -1,8 +1,8 @@
-#import matplotlib.pyplot as plt
 import random, math
 
 A = 15
 B = 30
+COUNT = 10**5
 
 # このプログラムではとりあえず、全ての乱数発生は指数分布に基づいて行う
 
@@ -104,7 +104,7 @@ def main():
     bufferA_packets_history = []
     bufferB_packets_history = []
 
-    while c1 < 10**5:
+    while c1 < COUNT:
         if t1 < t2a and t1 < t2b:
             bufferA_packets_history = avarage_packets(bufferA_packets_history, t1, bufferA)
             bufferB_packets_history = avarage_packets(bufferB_packets_history, t1, bufferB)
