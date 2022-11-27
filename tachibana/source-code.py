@@ -38,7 +38,10 @@ def avarage_packets(update_packets, event_time, target_buffer):
     return update_packets
 
 def cal_avarage_packets(buffer_history):
-    #print(len(buffer_history)) # ここの値は今回の到着パケット数の大体2倍くらいの値になる
+    #print(len(buffer_history)) 
+    # ここの値は今回の到着パケット数の大体2倍くらいの値になる
+    # 理由はパケットはバッファに入る以外に出るときにも記録されるから
+    # ここで、2倍にならない理由は、棄却されるパケットも存在するから
     #print(buffer_history[:10])
     c = 0
     history = []
@@ -51,10 +54,24 @@ def cal_avarage_packets(buffer_history):
     return sum(counts) / sum(history)
 
 def cal_avarage_system_time(buffer_history, packets_num):
-    return sum(list(map(lambda x: x[0], buffer_history))) / packets_num
+    #return sum(list(map(lambda x: x[0], buffer_history))) / packets_num
+    c = 0
+    st = []
+    while c < len(buffer_history) - 1:
+        t = buffer_history[c+1][1] - buffer_history[c][1]
+        st.append(t * buffer_history[c][0])
+        c += 1
+    return sum(st) / (packets_num * buffer_history[-1][1])
 
 def cal_avarage_wait_time(buffer_history, packets_num):
-    return sum(list(filter(lambda x: x >= 0, map(lambda x: x[0]-1, buffer_history)))) / packets_num
+    #return sum(list(filter(lambda x: x >= 0, map(lambda x: x[0]-1, buffer_history)))) / packets_num
+    c = 0
+    st = []
+    while c < len(buffer_history) - 1:
+        t = buffer_history[c+1][1] - buffer_history[c][1]
+        st.append(t * (buffer_history[c][0]-1))
+        c += 1
+    return sum(st) / (packets_num * buffer_history[-1][1])
 
 def exponential_distribution(Lambda):
     return (-1 / Lambda) * math.log(1 - random.random())
@@ -188,9 +205,9 @@ total:   {}
 bufferA: {}
 bufferB: {}
 """.format(
-    cal_avarage_system_time(bufferA_packets_history + bufferB_packets_history, c1),
-    cal_avarage_system_time(bufferA_packets_history, c1a),
-    cal_avarage_system_time(bufferB_packets_history, c1b)
+    cal_avarage_system_time(bufferA_packets_history + bufferB_packets_history, c1 - ca - ab),
+    cal_avarage_system_time(bufferA_packets_history, c1a - ca),
+    cal_avarage_system_time(bufferB_packets_history, c1b - cb)
     ))
 
     print("""平均システム内待ち行列遅延
@@ -198,9 +215,9 @@ total:   {}
 bufferA: {}
 bufferB: {}
 """.format(
-    cal_avarage_wait_time(bufferA_packets_history + bufferB_packets_history, c1),
-    cal_avarage_wait_time(bufferA_packets_history, c1a),
-    cal_avarage_wait_time(bufferB_packets_history, c1b)
+    cal_avarage_wait_time(bufferA_packets_history + bufferB_packets_history, c1 - ca - cb),
+    cal_avarage_wait_time(bufferA_packets_history, c1a - ca),
+    cal_avarage_wait_time(bufferB_packets_history, c1b - cb)
     ))
             
 if __name__ == "__main__":
