@@ -74,14 +74,18 @@ def simulation(count, bufferA, bufferB, lambda1=0.7, lambda2=1.1, p=0.4):
 
 def calculation_average_system_packets(buffer_history):
     c = 0
-    history = []
-    counts = []
+    #history = []
+    #counts = []
+    st = []
     while c < len(buffer_history) - 1:
         t = buffer_history[c+1][1] - buffer_history[c][1]
-        history.append(t)
-        counts.append(buffer_history[c][0])
+        #history.append(t)
+        #counts.append(buffer_history[c][0])
+        st.append(t * buffer_history[c][0])
         c += 1
-    return sum(counts) / sum(history)
+    #return sum(counts) / sum(history)
+
+    return sum(st) / buffer_history[-1][1]
 
 def calculation_average_system_delay(buffer_history, arrival_packets):
     c = 0
@@ -90,7 +94,8 @@ def calculation_average_system_delay(buffer_history, arrival_packets):
         t = buffer_history[c+1][1] - buffer_history[c][1]
         st.append(t * buffer_history[c][0])
         c += 1
-    return sum(st) / (arrival_packets * buffer_history[-1][1])
+    #return sum(st) / (arrival_packets * buffer_history[-1][1])
+    return sum(st) / arrival_packets
 
 def calculation_average_system_queue_delay(buffer_history, arrival_packets):
     c = 0
@@ -102,19 +107,20 @@ def calculation_average_system_queue_delay(buffer_history, arrival_packets):
             num = 0
         st.append(t * num)
         c += 1
-    return sum(st) / (arrival_packets * buffer_history[-1][1])
+    #return sum(st) / (arrival_packets * buffer_history[-1][1])
+    return sum(st) / arrival_packets
 
 def main():
 
     A = 10
     B = 20
-    Count = 10 ** 6
+    Count = 10 ** 5
 
     # BufferクラスからbufferAとbufferBを生成
     bufferA = Buffer(A)
     bufferB = Buffer(B)
 
-    simulation(Count, bufferA, bufferB, 0.5, 1.1)
+    simulation(Count, bufferA, bufferB, 0.3, 1.1)
 
     print("""
     パケット到着数
@@ -130,8 +136,7 @@ def main():
     パケット棄却率
     total:   {}
     bufferA: {}
-    bufferB: {}
-    """.format((
+    bufferB: {}""".format((
         bufferA.packet_rejection_count + bufferB.packet_rejection_count) / (bufferA.packet_arrival_count + bufferB.packet_arrival_count), 
         bufferA.packet_rejection_count/bufferA.packet_arrival_count, 
         bufferB.packet_rejection_count/bufferB.packet_arrival_count
@@ -149,13 +154,14 @@ def main():
         bufferB_average_packets
         )) 
 
+    total_history = [[bufferA.history[i][0] + bufferB.history[i][0], bufferA.history[i][1]] for i in range(len(bufferA.history))]
     print("""
     平均システム内遅延
     total:   {}
     bufferA: {}
     bufferB: {}""".format(
         calculation_average_system_delay(
-            bufferA.history + bufferB.history, 
+            total_history, 
             bufferA.packet_arrival_count + bufferB.packet_arrival_count - bufferA.packet_rejection_count - bufferB.packet_rejection_count
             ),
         calculation_average_system_delay(bufferA.history, bufferA.packet_arrival_count - bufferA.packet_rejection_count),
@@ -169,7 +175,7 @@ def main():
     bufferB: {}
     """.format(
         calculation_average_system_queue_delay(
-            bufferA.history + bufferB.history, 
+            total_history, 
             bufferA.packet_arrival_count + bufferB.packet_arrival_count - bufferA.packet_rejection_count - bufferB.packet_rejection_count
             ),
         calculation_average_system_queue_delay(bufferA.history, bufferA.packet_arrival_count - bufferA.packet_rejection_count),
