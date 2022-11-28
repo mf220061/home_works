@@ -5,13 +5,14 @@ import random, math
 # バッファクラス
 class Buffer:
     def __init__(self, size):
-        self.buffer = []
-        self.size = size
-        self.history = []
-        self.service_end_time = float('infinity')
-        self.packet_rejection_count = 0
-        self.packet_arrival_count = 0
+        self.buffer = []                            # バッファの内部
+        self.size = size                            # バッファサイズ（出力リンク込み）
+        self.history = []                           # パケットの出入りの履歴
+        self.service_end_time = float('infinity')   # 出力リンクのパケットのサービス時間（出力リンクにパケットがないときは無限）
+        self.packet_rejection_count = 0             # パケットが棄却された数
+        self.packet_arrival_count = 0               # バッファに到着したパケットの数
 
+    # バッファにパケット追加
     def add(self, packet):
         if len(self.buffer) >= self.size:
             self.packet_rejection_count += 1
@@ -21,6 +22,7 @@ class Buffer:
     def update_history(self, event_time):
         self.history.append([len(self.buffer), event_time])
 
+    # 出力リンク中のパケットのサービスが終了
     def finish_service(self):
         self.buffer.pop(0)
         event_time = self.service_end_time
@@ -30,6 +32,7 @@ class Buffer:
             self.service_end_time += self.buffer[0]
         return event_time
 
+    # バッファにパケットが到着
     def arrival_packet(self, packet_arrival_time, arrival_packet_service_time, next_packet_arrival_time):
         self.packet_arrival_count += 1
         if len(self.buffer) == 0:
@@ -72,21 +75,17 @@ def simulation(count, bufferA, bufferB, lambda1=0.7, lambda2=1.1, p=0.4):
         bufferA.update_history(time)
         bufferB.update_history(time)
 
+# 平均システム内パケット数の計算
 def calculation_average_system_packets(buffer_history):
     c = 0
-    #history = []
-    #counts = []
     st = []
     while c < len(buffer_history) - 1:
         t = buffer_history[c+1][1] - buffer_history[c][1]
-        #history.append(t)
-        #counts.append(buffer_history[c][0])
         st.append(t * buffer_history[c][0])
         c += 1
-    #return sum(counts) / sum(history)
-
     return sum(st) / buffer_history[-1][1]
 
+# 平均システム内遅延の計算
 def calculation_average_system_delay(buffer_history, arrival_packets):
     c = 0
     st = []
@@ -94,9 +93,9 @@ def calculation_average_system_delay(buffer_history, arrival_packets):
         t = buffer_history[c+1][1] - buffer_history[c][1]
         st.append(t * buffer_history[c][0])
         c += 1
-    #return sum(st) / (arrival_packets * buffer_history[-1][1])
     return sum(st) / arrival_packets
 
+# 平均システム内待ち行列遅延の計算
 def calculation_average_system_queue_delay(buffer_history, arrival_packets):
     c = 0
     st = []
@@ -107,7 +106,6 @@ def calculation_average_system_queue_delay(buffer_history, arrival_packets):
             num = 0
         st.append(t * num)
         c += 1
-    #return sum(st) / (arrival_packets * buffer_history[-1][1])
     return sum(st) / arrival_packets
 
 def main():
