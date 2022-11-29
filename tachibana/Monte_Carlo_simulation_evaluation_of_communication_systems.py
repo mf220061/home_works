@@ -5,7 +5,7 @@ import random, math
 # バッファクラス
 class Buffer:
     def __init__(self, size):
-        self.buffer = []                            # バッファの内部
+        self.buffer = []                            # バッファの内部（このリストの0番目を出力リンクとして考える）
         self.size = size                            # バッファサイズ（出力リンク込み）
         self.history = []                           # パケットの出入りの履歴
         self.service_end_time = float('infinity')   # 出力リンクのパケットのサービス時間（出力リンクにパケットがないときは無限）
@@ -54,7 +54,11 @@ def simulation(count, bufferA, bufferB, lambda1=0.7, lambda2=1.1, p=0.4):
 
     while bufferA.packet_arrival_count + bufferB.packet_arrival_count < count:
         if packet_arrival_time < bufferA.service_end_time and packet_arrival_time < bufferB.service_end_time:
+
+            # 到着したパケットのサービス時間
             arrival_packet_service_time = exponential_distribution_random(lambda1)
+
+            # 次のパケットが到着するまでの時間
             next_packet_arrival_time = exponential_distribution_random(lambda2)
 
             if random.random() < p:
